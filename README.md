@@ -2,7 +2,7 @@
 
 API REST de processamento de pagamentos construída do zero para o desafio de **Padrões de Projeto** do bootcamp da DIO. Não é uma cópia do laboratório: o domínio (pagamentos, taxas, antifraude) é novo, e cada padrão aparece porque resolve um problema real do fluxo — não como demonstração de vitrine.
 
-![CI](https://github.com/KelvinOliveiraCode/kodapay-api/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/KelvinOliveiraCode/KodaPay/actions/workflows/ci.yml/badge.svg)
 
 ## Stack
 

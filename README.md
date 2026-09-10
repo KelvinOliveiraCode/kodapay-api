@@ -96,7 +96,7 @@ Resposta `201` (trecho): pagamento aprovado com `fee: 0.49`, `total: 37.99`, `st
 
 ### Autor
 
-**Kelvin Oliveira** — [GitHub](https://github.com/KelvinOliveiraCode) · [LinkedIn](https://www.linkedin.com/in/kelvin-oliveira-0282033b4/)
+**Kelvin Oliveira** — [GitHub](https://github.com/KelvinOliveiraCode) · [LinkedIn](https://www.linkedin.com/in/kelvin-oliveira-code/)
 
 ---
 
@@ -131,4 +131,4 @@ A payment processing REST API in **Java 21 + Spring Boot 3.5**, built for the DI
 
 ### Author
 
-**Kelvin Oliveira** — [GitHub](https://github.com/KelvinOliveiraCode) · [LinkedIn](https://www.linkedin.com/in/kelvin-oliveira-0282033b4/)
+**Kelvin Oliveira** — [GitHub](https://github.com/KelvinOliveiraCode) · [LinkedIn](https://www.linkedin.com/in/kelvin-oliveira-code/)

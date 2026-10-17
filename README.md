@@ -1,62 +1,60 @@
 # KodaPay API
 
-API REST de processamento de pagamentos construída do zero para o desafio de **Padrões de Projeto** do bootcamp da DIO. Não é uma cópia do laboratório: o domínio (pagamentos, taxas, antifraude) é novo, e cada padrão aparece porque resolve um problema real do fluxo — não como demonstração de vitrine.
-
+![Java 21](https://img.shields.io/badge/Java-21-%23007396?style=flat-square)
+![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3-%236DB33F?style=flat-square)
 ![CI](https://github.com/KelvinOliveiraCode/kodapay-api/actions/workflows/ci.yml/badge.svg)
+
+API REST de processamento de pagamentos com Java 21 e Spring Boot 3 que aplica padrões de projeto GoF (Strategy, Chain of Responsibility, Observer, Factory, Singleton e Facade) no fluxo real de uma transação: taxa, risco, persistência e notificação.
+
+## Problema / Por que existe
+
+Processar um pagamento exige coordenar responsabilidades que não devem viver juntas: a taxa muda conforme o método de pagamento, as regras de risco devem ser avaliadas em ordem fixa, a transação precisa ser registrada com trilha de auditoria e sistemas externos precisam ser avisados — tudo sem travar o fluxo principal. Colocar isso em uma única camada de serviço gera condicionais difíceis de testar e de mudar. Cada responsabilidade aqui fica isolada no padrão que lhe cabe, de modo que incluir um novo método de pagamento ou uma nova regra de risco não exige alterar o código existente.
+
+## O que faz
+
+- Expõe POST /api/v1/payments para processar um pagamento (pagador, descrição, valor, método).
+- Calcula a taxa com base no método: Pix R$ 0,49 fixo, boleto R$ 2,49 fixo, crédito 3,99% do valor, débito 1,89% do valor.
+- Executa três regras de risco em cadeia: valor acima de R$ 15.000,00, pagador na lista restrita e mais de três transações do mesmo pagador na última hora.
+- Recusa a requisição com HTTP 422 quando alguma regra veta, informando o motivo.
+- Persiste a transação aprovada com a trilha de auditoria completa.
+- Publica um evento de conclusão; listeners de mensageria e métricas reagem sem o fluxo principal conhecê-los, visíveis em GET /api/v1/observability.
+- Consulta o histórico e o detalhe de transações por id.
+- Serve documentação interativa em GET /docs (Swagger UI) e a especificação OpenAPI 3 em GET /api-docs.
 
 ## Stack
 
-- Java 21, Spring Boot 3.5 (Web, Validation)
+- Java 21
+- Spring Boot 3.5.16 (Web, Validation)
 - Maven
-- springdoc-openapi (Swagger UI em `/docs`)
-- JUnit 5 + Mockito + MockMvc (26 testes)
+- springdoc-openapi 2.8.17
+- JUnit 5, Mockito, MockMvc — 26 testes
+- GitHub Actions (JDK 21 Temurin, mvn -B verify)
 
-## Os padrões e onde moram
+## Como funciona
 
-| Padrão | Arquivo | O que resolve aqui |
-|---|---|---|
-| **Strategy** | `strategy/FeeCalculator` + 4 implementações | Cada método de pagamento (Pix, boleto, crédito, débito) tem sua política de taxa. O service pergunta "qual é a taxa?" sem conhecer as fórmulas. Novo método = nova classe anotada com `@Component`, zero mudança no código existente. |
-| **Chain of Responsibility** | `chain/RiskHandler` → `HighValue`, `Blocklist`, `Velocity` | Cada regra de risco avalia a transação e passa adiante — ou veta com `422`. A ordem fica nas anotações `@Order`, não dentro das regras. |
-| **Singleton** | `chain/PaymentRegistry` + escopo padrão do Spring | Um único registro de transações por JVM, com a trilha usada pela regra de velocidade. |
-| **Facade** | `service/PaymentService.process()` | O controller chama um método. Taxa, risco, persistência e eventos são coordenados por dentro. |
-| **Observer** | `observer/PaymentEvent` + `MessagingListener`, `MetricsListener` | O processamento publica um evento; mensageria e métricas reagem sem o fluxo principal conhecê-las. Visível em `GET /api/v1/observability`. |
-| **Repository** | `chain/PaymentRegistry` | Persistência em memória com interface de repositório (sem banco para manter o foco nos padrões). |
+Pipeline de pagamento
 
-## Pipeline de um pagamento
+1. PaymentController valida o payload (bean validation) e delega para PaymentService, que atua como fachada dos subsistemas.
+2. PaymentService escolhe a estratégia de taxa pelo método (Strategy). Um novo método de pagamento significa uma nova classe anotada com @Component; nada no service muda.
+3. Risco: o factory cria uma cadeia nova por requisição (Factory + Chain of Responsibility). Os três handlers executam na ordem dada por @Order: limite de valor (1), lista restrita (2), velocidade (3). Qualquer veto interrompe o restante.
+4. Se aprovado, PaymentRegistry — único registro por JVM (Singleton) — grava a transação.
+5. PaymentService publica PaymentEvent (Observer); MessagingListener e MetricsListener reagem de forma desacoplada.
+6. Resposta 201 com o pagamento, o total (valor + taxa) e a trilha de auditoria.
 
-```
-POST /api/v1/payments
-        │
-        ▼
-[Strategy] escolhe a política de taxa pelo método
-        │  Pix/boleto: taxa fixa | crédito: 3,99% | débito: 1,89%
-        ▼
-[Chain of Responsibility] risco, elo a elo
-        │  1. valor > R$ 15.000? → 422
-        │  2. pagador na lista restrita? → 422
-        │  3. 3+ transações na última hora? → 422
-        ▼
-[Singleton/Repository] grava a transação
-        │
-        ▼
-[Observer] publica evento → mensageria + métricas reagem
-        │
-        ▼
-201 + trilha de auditoria completa
-```
+Todos os cálculos monetários usam BigDecimal com arredondamento HALF_EVEN de duas casas.
 
-## Endpoints
+Endpoints
 
 | Método | Rota | Descrição |
 |---|---|---|
-| POST | `/api/v1/payments` | Processa um pagamento (retorna taxa, total e trilha de auditoria) |
-| GET | `/api/v1/payments` | Histórico de transações |
-| GET | `/api/v1/payments/{id}` | Detalhe de uma transação |
-| GET | `/api/v1/observability` | Efeitos acumulados dos observadores (mensageria/métricas) |
-| GET | `/docs` | Swagger UI |
-| GET | `/api-docs` | Especificação OpenAPI 3 |
+| POST | /api/v1/payments | Processa um pagamento (retorna taxa, total e trilha de auditoria) |
+| GET | /api/v1/payments | Histórico de transações |
+| GET | /api/v1/payments/{id} | Detalhe de uma transação |
+| GET | /api/v1/observability | Efeitos acumulados dos observadores (mensageria + métricas) |
+| GET | /docs | Swagger UI |
+| GET | /api-docs | Especificação OpenAPI 3 |
 
-### Criar um pagamento
+Exemplo de requisição
 
 ```bash
 curl -X POST http://localhost:9090/api/v1/payments \
@@ -69,7 +67,7 @@ curl -X POST http://localhost:9090/api/v1/payments \
   }'
 ```
 
-Resposta (201):
+Resposta (201)
 
 ```json
 {
@@ -92,37 +90,57 @@ Resposta (201):
 }
 ```
 
-Erros: `400` payload inválido, `404` transação inexistente, `422` veto de risco (com o motivo no campo `detail`).
+Os códigos de erro possíveis são 400 (payload inválido), 404 (transação inexistente) e 422 (veto de risco, com o motivo no campo detail, RFC 7807).
 
 ## Como rodar
 
 Requisitos: Java 21 e Maven.
 
 ```bash
-./mvnw verify        # build + 26 testes
+./mvnw verify        # build e executa os 26 testes
 ./mvnw spring-boot:run
 # API em http://localhost:9090 — Swagger em /docs
 ```
 
-## Taxas aplicadas
+## Estrutura do projeto
 
-| Método | Política |
-|---|---|
-| PIX | fixa R$ 0,49 |
-| BOLETO | fixa R$ 2,49 |
-| CREDIT_CARD | 3,99% do valor |
-| DEBIT_CARD | 1,89% do valor |
+```
+src/main/java/com/kodapay/
+  chain/        RiskHandler (3 elos: valor, lista restrita, velocidade), RiskChain,
+                RiskChainFactory (cadeia nova por pagamento), PaymentRegistry (registro único)
+  domain/       Payment, PaymentMethod, PaymentStatus, AuditEvent
+  dto/          PaymentRequest, PaymentResponse, PaymentView
+  exception/    InvalidPaymentException, PaymentNotFoundException, RiskViolationException
+  observer/     PaymentEvent, PaymentEventPublisher, MessagingListener, MetricsListener
+  service/      PaymentService (fachada: taxa, risco, registro, evento)
+  strategy/     FeeCalculator + Pix, Boleto, CreditCard, DebitCard
+  web/          PaymentController, ObservabilityController, GlobalExceptionHandler
+src/test/       26 testes divididos em cadeia, service, estratégias e controller
+pom.xml         Java 21, Spring Boot 3.5.16, springdoc-openapi 2.8.17
+src/main/resources/application.yml   porta 9090, caminhos /docs e /api-docs
+```
 
-## Decisões de design
+## Trade-offs e decisões
 
-- **Cadeia por requisição.** A primeira versão tinha a cadeia como bean singleton; a segunda requisição HTTP encontrava o ponteiro no fim e passava por todas as checagens de risco. O bug foi pego por teste de integração (esperava `422`, voltava `201`) e resolvido com um factory que cria cadeia nova a cada pagamento. É o tipo de defeito que passa em review e estoura em produção.
-- **`BigDecimal` em dinheiro**, com arredondamento `HALF_EVEN` de 2 casas — nunca `double`.
-- **API versionada** (`/api/v1`) e erros no formato RFC 7807 (ProblemDetail).
-- **Sem banco de dados.** O `PaymentRegistry` persiste em memória para manter o foco nos padrões; a interface de repositório deixa o caminho pronto para trocar por JPA sem tocar no service.
-- **Sem gateway externo.** Os números são uma simulação honesta: as taxas são reais de mercado, mas nenhum pagamento acontece.
+- Cadeia nova por requisição. A primeira versão mantinha a cadeia como bean singleton: a segunda requisição encontrava o ponteiro no fim e nenhuma regra de risco rodava. Um teste de integração pegou o problema (esperava 422, voltou 201). O RiskChainFactory agora cria uma cadeia nova a cada pagamento. É o tipo de defeito que passa em review e estoura em produção.
+- BigDecimal para dinheiro, nunca double, com arredondamento HALF_EVEN de duas casas.
+- API versionada (/api/v1) e erros no formato RFC 7807 (ProblemDetail).
+- Sem banco de dados. PaymentRegistry mantém as transações em memória para manter o foco nos padrões; a interface de repositório deixa o caminho pronto para trocar por JPA sem tocar no service.
+- Sem gateway externo. As taxas são baseadas no mercado, mas nenhum pagamento real acontece — é uma simulação honesta.
+- Mensageria e métricas são simuladas em memória (listeners ArrayList), expostas apenas pelo endpoint de observabilidade.
 
-## Referências
+## Limitações conhecidas
 
-- [Lab "Explorando Padrões de Projeto na Prática com Java" — DIO](https://github.com/digitalinnovationone/lab-padroes-projeto-java)
-- [Refactoring Guru — Design Patterns](https://refactoring.guru/design-patterns)
+- Histórico em memória: reiniciar a aplicação apaga as transações registradas.
+- Não há autenticação nem autorização.
+- Mensageria e métricas não integram provedores externos.
+- A lista restrita de risco é um conjunto fixo no código.
+- A regra de velocidade conta apenas transações da instância JVM em execução.
 
+## Licença
+
+MIT
+
+## Autor
+
+Kelvin Oliveira — github.com/KelvinOliveiraCode

@@ -1,56 +1,129 @@
 # kodapay-api
 
-[![Java 21](https://img.shields.io/badge/Java-21-%23007396?style=flat-square)](https://adoptium.net/)   ![status: done](https://img.shields.io/badge/status-done-green)   ![license: MIT](https://img.shields.io/badge/license-MIT-blue)
+<div align="center">
 
-## Summary
+**English** · [Português (Brasil)](README.md)
 
-API REST de pagamentos com 6 padrões GoF, Spring Boot 3 e Java 21 | Payment REST API with 6 GoF patterns
-## Problem / Why it exists
+</div>
 
-The project addresses a practical scope and automates a task that, done manually, is repetitive and error-prone. The focus is on turning data or processes into reliable output, with readable, testable, and extensible code.
-## Architecture
+[![Java 21](https://img.shields.io/badge/Java-21-%23007396?style=flat-square)](https://adoptium.net/) [![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3-%236DB33F?style=flat-square)](https://spring.io/projects/spring-boot) [![Maven](https://img.shields.io/badge/Maven-3.9-C71A36?style=flat-square&logo=apache-maven)](https://maven.apache.org/) [![JUnit 5](https://img.shields.io/badge/JUnit-5-25A162?style=flat-square&logo=junit5)](https://junit.org/junit5/) [![MIT License](https://img.shields.io/badge/License-MIT-f4c430?style=flat-square)](LICENSE)
 
-The code is organized by responsibility into 0 main classes:
-## What it does
+### Payment REST API with 6 GoF patterns
 
-API REST de pagamentos com 6 padrões GoF, Spring Boot 3 e Java 21 | Payment REST API with 6 GoF patterns
-## How to run
+---
 
-Requirements: Java 21 and Maven.
+## What it is
+
+Payment REST API with 6 GoF patterns
+
+---
+
+## Quick Start
 
 ```bash
-./mvnw verify     # build and run tests
+# Clone and enter
+git clone https://github.com/KelvinOliveiraCode/<repo>.git
+cd <repo>
+
+# Build and run tests
+./mvnw verify
+
+# Run the application
 ./mvnw spring-boot:run
-# API at http://localhost:8080
+# API available at http://localhost:8080
+# Swagger UI at http://localhost:8080/docs
 ```
-If `application.yml` exists, adjust the port before running.
-## Project Structure (Key Classes)
+
+## How it works
+
+Clean, modular structure with separation of concerns.
+
+---
+
+## Capabilities
+
+| Capability | Description |
+|------------|-------------|
+| REST API | Spring Boot 3, versioned endpoints, RFC 7807 errors |
+| Fee Calculation | Strategy pattern ,  PIX R$0.49, Boleto R$2.49, Credit 3.99%, Debit 1.89% |
+| Risk Validation | Chain of Responsibility ,  HighValue -> Blocklist -> Velocity |
+| Transaction Registry | Singleton in-memory registry with full audit trail |
+| Event System | Observer pattern ,  decoupled messaging & metrics listeners |
+| Observability | /api/v1/observability endpoint exposing listener effects |
+| API Docs | springdoc-openapi ,  Swagger UI at /docs, OpenAPI 3 at /api-docs |
+| Testing | JUnit 5, Mockito, MockMvc ,  integration + unit tests |
 
 
-## Trade-offs and Technical Decisions
+---
 
-- New chain per request: keeping the chain as a singleton bean made risk rules stop executing after the first request. The factory now creates a new chain per payment.
-- `BigDecimal` for money, never `double`, with `HALF_EVEN` rounding to two decimal places.
-- Versioned API and errors in RFC 7807 (ProblemDetail) format.
-- No database: the registry keeps transactions in memory to keep focus on patterns; the repository interface leaves the path open to swap in JPA without touching the service.
-- No external gateway: it is an honest simulation, no real payment happens.
-- Messaging and metrics simulated in memory, exposed only through the observability endpoint.
-## Known Limitations
+## Showcase
 
-- In-memory history: restarting the application erases registered transactions.
-- No authentication or authorization.
-- Messaging and metrics do not integrate external providers (Kafka, Prometheus, etc.).
-- Blocklist and velocity limits fixed in code (not configurable).
-## Tests
+### Payment Pipeline Deep Dive
 
-```bash
-./mvnw test
-```
-The repository contains automated tests (JUnit 5, Mockito, MockMvc).
+Trace a payment request through the full pipeline:
+
+1. **Controller** validates payload -> **Service (Facade)** coordinates
+2. **Strategy** selects fee calculator by payment method
+3. **Chain of Responsibility** runs 3 risk rules in order (veto = stop)
+4. **Singleton Registry** persists with audit trail
+5. **Observer** notifies messaging & metrics listeners
+
+[See the code](src/main/java/com/kodapay/service/PaymentService.java) · [Risk Chain](src/main/java/com/kodapay/chain/RiskChain.java)
+
+---
+
+## FAQ
+
+<details>
+<summary><strong>Why a new chain per request?</strong></summary>
+
+A singleton chain would keep its internal pointer at the end after the first request, causing all subsequent risk checks to be skipped. The factory creates a fresh chain each time.
+
+</details>
+
+<details>
+<summary><strong>Why BigDecimal and not double?</strong></summary>
+
+Financial calculations require exact decimal representation. double introduces floating-point errors (e.g., 0.1 + 0.2 ≠ 0.3). BigDecimal with HALF_EVEN rounding guarantees cent-precision.
+
+</details>
+
+<details>
+<summary><strong>Can I swap the in-memory registry for a database?</strong></summary>
+
+Yes. The registry is behind an interface; replace the implementation with JPA/Hibernate without touching the service layer.
+
+</details>
+
+<details>
+<summary><strong>Is this production-ready?</strong></summary>
+
+It is a **study project** demonstrating GoF patterns. It lacks auth, external messaging, and persistence ,  add those for production.
+
+</details>
+
+
+
+---
+
+## Documentation
+
+- **Source Code** ,  Browse the `src/` directory for implementation details
+- **API Reference** ,  Swagger UI at `/docs` when running
+- **Architecture Diagram** ,  See [architecture.mermaid](docs/architecture.mermaid) (if present)
+- **Changelog** ,  [CHANGELOG.md](CHANGELOG.md) (if present)
+- **Contributing** ,  [CONTRIBUTING.md](CONTRIBUTING.md) (if present)
+
 ## License
 
-Distributed under the MIT License. See the `LICENSE` file in this repository.
-## Author
+[MIT](LICENSE) ,  Kelvin Oliveira
 
-Kelvin Oliveira ,  https://github.com/KelvinOliveiraCode
-Portfolio: https://kelvinoliveiracode.github.io/portfolio/
+---
+
+<div align="center">
+
+**Built with** · Java 21 + Spring Boot 3 + Maven
+
+**Author** · [Kelvin Oliveira](https://github.com/KelvinOliveiraCode) · [Portfolio](https://kelvinoliveiracode.github.io/portfolio/)
+
+</div>

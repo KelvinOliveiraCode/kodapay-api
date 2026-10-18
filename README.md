@@ -40,18 +40,18 @@ Estrutura limpa e modular com separação de responsabilidades.
 
 ---
 
-## Capabilities
+## Capacidades
 
-| Capability | Description |
+| Capacidade | Descrição |
 |------------|-------------|
-| REST API | Spring Boot 3, versioned endpoints, RFC 7807 errors |
-| Fee Calculation | Strategy pattern ,  PIX R$0.49, Boleto R$2.49, Credit 3.99%, Debit 1.89% |
-| Risk Validation | Chain of Responsibility ,  HighValue -> Blocklist -> Velocity |
-| Transaction Registry | Singleton in-memory registry with full audit trail |
-| Event System | Observer pattern ,  decoupled messaging & metrics listeners |
-| Observability | /api/v1/observability endpoint exposing listener effects |
-| API Docs | springdoc-openapi ,  Swagger UI at /docs, OpenAPI 3 at /api-docs |
-| Testing | JUnit 5, Mockito, MockMvc ,  integration + unit tests |
+| API REST | Spring Boot 3, endpoints versionados, erros RFC 7807 |
+| Cálculo de Taxa | Strategy pattern ,  PIX R$0,49, Boleto R$2,49, Crédito 3,99%, Débito 1,89% |
+| Validação de Risco | Chain of Responsibility ,  HighValue -> Blocklist -> Velocity |
+| Registro de Transações | Registry Singleton em memória com trilha de auditoria completa |
+| Sistema de Eventos | Observer pattern ,  mensageria e métricas desacopladas |
+| Observabilidade | Endpoint /api/v1/observability expondo efeitos dos listeners |
+| Documentação da API | springdoc-openapi ,  Swagger UI em /docs, OpenAPI 3 em /api-docs |
+| Testes | JUnit 5, Mockito, MockMvc ,  testes de integração + unidade |
 
 
 ---
@@ -72,33 +72,33 @@ Trace a payment request through the full pipeline:
 
 ---
 
-## FAQ
+## Perguntas Frequentes
 
 <details>
-<summary><strong>Why a new chain per request?</strong></summary>
+<summary><strong>Por que uma nova cadeia por requisição?</strong></summary>
 
-A singleton chain would keep its internal pointer at the end after the first request, causing all subsequent risk checks to be skipped. The factory creates a fresh chain each time.
+Uma cadeia singleton manteria seu ponteiro interno no final após a primeira requisição, fazendo com que todas as checagens de risco subsequentes fossem puladas. A fábrica cria uma cadeia nova a cada vez.
 
 </details>
 
 <details>
-<summary><strong>Why BigDecimal and not double?</strong></summary>
+<summary><strong>Por que BigDecimal e não double?</strong></summary>
 
-Financial calculations require exact decimal representation. double introduces floating-point errors (e.g., 0.1 + 0.2 ≠ 0.3). BigDecimal with HALF_EVEN rounding guarantees cent-precision.
-
-</details>
-
-<details>
-<summary><strong>Can I swap the in-memory registry for a database?</strong></summary>
-
-Yes. The registry is behind an interface; replace the implementation with JPA/Hibernate without touching the service layer.
+Cálculos financeiros exigem representação decimal exata. double introduz erros de ponto flutuante (ex.: 0,1 + 0,2 ≠ 0,3). BigDecimal com arredondamento HALF_EVEN garante precisão de centavos.
 
 </details>
 
 <details>
-<summary><strong>Is this production-ready?</strong></summary>
+<summary><strong>Posso trocar o registro em memória por um banco de dados?</strong></summary>
 
-It is a **study project** demonstrating GoF patterns. It lacks auth, external messaging, and persistence ,  add those for production.
+Sim. O registro está atrás de uma interface; substitua a implementação por JPA/Hibernate sem tocar na camada de serviço.
+
+</details>
+
+<details>
+<summary><strong>Está pronto para produção?</strong></summary>
+
+É um **projeto de estudo** demonstrando padrões GoF. Falta auth, mensageria externa e persistência ,  adicione esses para produção.
 
 </details>
 
@@ -106,15 +106,15 @@ It is a **study project** demonstrating GoF patterns. It lacks auth, external me
 
 ---
 
-## Documentation
+## Documentação
 
-- **Source Code** ,  Browse the `src/` directory for implementation details
-- **API Reference** ,  Swagger UI at `/docs` when running
-- **Architecture Diagram** ,  See [architecture.mermaid](docs/architecture.mermaid) (if present)
-- **Changelog** ,  [CHANGELOG.md](CHANGELOG.md) (if present)
-- **Contributing** ,  [CONTRIBUTING.md](CONTRIBUTING.md) (if present)
+- **Código-Fonte** ,  Navegue pelo diretório `src/` para detalhes de implementação
+- **Referência da API** ,  Swagger UI em `/docs` ao executar
+- **Diagrama de Arquitetura** ,  Veja [architecture.mermaid](docs/architecture.mermaid) (se presente)
+- **Changelog** ,  [CHANGELOG.md](CHANGELOG.md) (se presente)
+- **Contribuindo** ,  [CONTRIBUTING.md](CONTRIBUTING.md) (se presente)
 
-## License
+## Licença
 
 [MIT](LICENSE) ,  Kelvin Oliveira
 
@@ -122,8 +122,8 @@ It is a **study project** demonstrating GoF patterns. It lacks auth, external me
 
 <div align="center">
 
-**Built with** · Java 21 + Spring Boot 3 + Maven
+**Construído com** · Java 21 + Spring Boot 3 + Maven
 
-**Author** · [Kelvin Oliveira](https://github.com/KelvinOliveiraCode) · [Portfolio](https://kelvinoliveiracode.github.io/portfolio/)
+**Autor** · [Kelvin Oliveira](https://github.com/KelvinOliveiraCode) · [Portfolio](https://kelvinoliveiracode.github.io/portfolio/)
 
 </div>

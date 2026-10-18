@@ -42,16 +42,16 @@ Estrutura limpa e modular com separação de responsabilidades.
 
 ## Capabilities
 
-| Capability | Description |
+| Capacidade | Descrição |
 |------------|-------------|
-| REST API | Spring Boot 3, versioned endpoints, RFC 7807 errors |
-| Fee Calculation | Strategy pattern ,  PIX R$0.49, Boleto R$2.49, Credit 3.99%, Debit 1.89% |
-| Risk Validation | Chain of Responsibility ,  HighValue -> Blocklist -> Velocity |
-| Transaction Registry | Singleton in-memory registry with full audit trail |
-| Event System | Observer pattern ,  decoupled messaging & metrics listeners |
-| Observability | /api/v1/observability endpoint exposing listener effects |
-| API Docs | springdoc-openapi ,  Swagger UI at /docs, OpenAPI 3 at /api-docs |
-| Testing | JUnit 5, Mockito, MockMvc ,  integration + unit tests |
+| API REST | Spring Boot 3, endpoints versionados, erros RFC 7807 |
+| Cálculo de Taxa | Strategy pattern ,  PIX R$0,49, Boleto R$2,49, Crédito 3,99%, Débito 1,89% |
+| Validação de Risco | Chain of Responsibility ,  HighValue -> Blocklist -> Velocity |
+| Registro de Transações | Registry Singleton em memória com trilha de auditoria completa |
+| Sistema de Eventos | Observer pattern ,  mensageria e métricas desacopladas |
+| Observabilidade | Endpoint /api/v1/observability expondo efeitos dos listeners |
+| Documentação da API | springdoc-openapi ,  Swagger UI em /docs, OpenAPI 3 em /api-docs |
+| Testes | JUnit 5, Mockito, MockMvc ,  testes de integração + unidade |
 
 
 ---

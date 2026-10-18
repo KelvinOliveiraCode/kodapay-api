@@ -14,7 +14,7 @@
 
 ## O que é
 
-API REST de pagamentos com 6 padrões GoF, Spring Boot 3 e Java 21 | Payment REST API with 6 GoF patterns
+API REST de pagamentos com 6 padrões GoF, Spring Boot 3 e Java 21
 
 ---
 

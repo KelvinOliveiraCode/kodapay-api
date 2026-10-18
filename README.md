@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**English** · [Português (Brasil)](README.md)
+[English](README.en.md) · **Português (Brasil)**
 
 </div>
 
@@ -18,25 +18,25 @@ API REST de pagamentos com 6 padrões GoF, Spring Boot 3 e Java 21 | Payment RES
 
 ---
 
-## Quick Start
+## Início Rápido
 
 ```bash
-# Clone and enter
+# Clone e entre
 git clone https://github.com/KelvinOliveiraCode/<repo>.git
 cd <repo>
 
-# Build and run tests
+# Build e execute os testes
 ./mvnw verify
 
-# Run the application
+# Execute a aplicação
 ./mvnw spring-boot:run
-# API available at http://localhost:8080
-# Swagger UI at http://localhost:8080/docs
+# API disponível em http://localhost:8080
+# Swagger UI em http://localhost:8080/docs
 ```
 
 ## Como funciona
 
-Clean, modular structure with separation of concerns.
+Estrutura limpa e modular com separação de responsabilidades.
 
 ---
 
